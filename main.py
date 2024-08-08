@@ -47,7 +47,7 @@ def start_services():
 
 
 def runserver():
-    management.call_command('runserver', "0.0.0.0:8080")
+    management.call_command('runserver', "localhost:8080")
 
 
 if __name__ == '__main__':

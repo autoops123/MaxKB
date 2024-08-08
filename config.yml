@@ -1,9 +1,9 @@
 # 数据库链接信息
 DB_NAME: maxkb
-DB_HOST: localhost
+DB_HOST: 192.168.101.31
 DB_PORT: 5432
-DB_USER: root
-DB_PASSWORD: xxxxxxx
+DB_USER: postgres
+DB_PASSWORD: postgres
 DB_ENGINE: django.db.backends.postgresql_psycopg2
 
 DEBUG: false
