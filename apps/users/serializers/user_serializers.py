@@ -259,13 +259,13 @@ class CheckCodeSerializer(ApiMixin, serializers.Serializer):
 
 
 class RePasswordSerializer(ApiMixin, serializers.Serializer):
-    email = serializers.EmailField(
-        required=True,
-        error_messages=ErrMessage.char("邮箱"),
-        validators=[validators.EmailValidator(message=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.message,
-                                              code=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.code)])
+    # email = serializers.EmailField(
+    #     required=True,
+    #     error_messages=ErrMessage.char("邮箱"),
+    #     validators=[validators.EmailValidator(message=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.message,
+    #                                           code=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.code)])
 
-    code = serializers.CharField(required=True, error_messages=ErrMessage.char("验证码"))
+    id = serializers.UUIDField(required=True, error_messages=ErrMessage.char("用户ID"))
 
     password = serializers.CharField(required=True, error_messages=ErrMessage.char("密码"),
                                      validators=[validators.RegexValidator(regex=re.compile(
@@ -286,14 +286,18 @@ class RePasswordSerializer(ApiMixin, serializers.Serializer):
 
     def is_valid(self, *, raise_exception=False):
         super().is_valid(raise_exception=True)
-        email = self.data.get("email")
-        cache_code = user_cache.get(email + ':reset_password')
+        # email = self.data.get("email")
+        # cache_code = user_cache.get(email + ':reset_password')
         if self.data.get('password') != self.data.get('re_password'):
             raise AppApiException(ExceptionCodeConstants.PASSWORD_NOT_EQ_RE_PASSWORD.value.code,
                                   ExceptionCodeConstants.PASSWORD_NOT_EQ_RE_PASSWORD.value.message)
-        if cache_code != self.data.get('code'):
-            raise AppApiException(ExceptionCodeConstants.CODE_ERROR.value.code,
-                                  ExceptionCodeConstants.CODE_ERROR.value.message)
+        # if cache_code != self.data.get('code'):
+        #     raise AppApiException(ExceptionCodeConstants.CODE_ERROR.value.code,
+        #                           ExceptionCodeConstants.CODE_ERROR.value.message)
+        if len(self.data.get('id')) == 0:
+            raise AppApiException(ExceptionCodeConstants.USER_ID_IS_NULL.value.code,
+                                  ExceptionCodeConstants.USER_ID_IS_NULL.value.message)
+
         return True
 
     def reset_password(self):
@@ -302,23 +306,24 @@ class RePasswordSerializer(ApiMixin, serializers.Serializer):
         :return: 是否成功
         """
         if self.is_valid():
-            email = self.data.get("email")
-            QuerySet(User).filter(email=email).update(
+            id = self.data.get("id")
+            print("用户ID:")
+            print(id)
+            QuerySet(User).filter(id=id).update(
                 password=password_encrypt(self.data.get('password')))
-            code_cache_key = email + ":reset_password"
+            # code_cache_key = email + ":reset_password"
             # 删除验证码缓存
-            user_cache.delete(code_cache_key)
+            # user_cache.delete(code_cache_key)
             return True
 
     def get_request_body_api(self):
         return openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['email', 'code', "password", 're_password'],
+            required=["password", 're_password','id'],
             properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING, title="邮箱", description="邮箱地址"),
-                'code': openapi.Schema(type=openapi.TYPE_STRING, title="验证码", description="验证码"),
                 'password': openapi.Schema(type=openapi.TYPE_STRING, title="密码", description="密码"),
-                're_password': openapi.Schema(type=openapi.TYPE_STRING, title="确认密码", description="确认密码")
+                're_password': openapi.Schema(type=openapi.TYPE_STRING, title="确认密码", description="确认密码"),
+                'id': openapi.Schema(type=openapi.TYPE_STRING, title="用户ID", description="用户ID")
             }
         )
 
@@ -497,7 +502,8 @@ class UserSerializer(ApiMixin, serializers.ModelSerializer):
 class UserInstanceSerializer(ApiMixin, serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'phone', 'is_active', 'role', 'nick_name', 'create_time', 'update_time', 'source']
+        fields = ['id', 'username', 'email', 'phone', 'is_active', 'role', 'nick_name', 'create_time', 'update_time',
+                  'source']
 
     @staticmethod
     def get_response_body_api():
@@ -643,7 +649,8 @@ class UserManageSerializer(serializers.Serializer):
 
         def is_valid(self, *, user_id=None, raise_exception=False):
             super().is_valid(raise_exception=True)
-            if self.data.get('email') is not None and QuerySet(User).filter(email=self.data.get('email')).exclude(id=user_id).exists():
+            if self.data.get('email') is not None and QuerySet(User).filter(email=self.data.get('email')).exclude(
+                    id=user_id).exists():
                 raise AppApiException(1004, "邮箱已经被使用")
 
         @staticmethod

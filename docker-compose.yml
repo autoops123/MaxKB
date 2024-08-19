@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+  maxkb:
+    container_name: maxkb-debug
+    image: python:3.11.9-slim-maxkb
+    volumes:
+      - D:/CodeSource/autoops/MaxKB:/opt/project
+    ports:
+      - "8080:8080"

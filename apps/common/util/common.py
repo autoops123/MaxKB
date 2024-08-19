@@ -81,7 +81,7 @@ def valid_license(model=None, count=None, message=None):
                     and QuerySet(
                         model).count() >= count):
                 error = message or f'超出限制{count},请联系我们（https://fit2cloud.com/）。'
-                raise AppApiException(400, error)
+                # raise AppApiException(400, error)
             return func(*args, **kwargs)
 
         return run

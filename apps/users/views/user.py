@@ -73,18 +73,21 @@ class ResetCurrentUserPasswordView(APIView):
                          operation_id="修改当前用户密码",
                          request_body=openapi.Schema(
                              type=openapi.TYPE_OBJECT,
-                             required=['email', 'code', "password", 're_password'],
+                             required=[ "password", 're_password','id'],
                              properties={
-                                 'code': openapi.Schema(type=openapi.TYPE_STRING, title="验证码", description="验证码"),
                                  'password': openapi.Schema(type=openapi.TYPE_STRING, title="密码", description="密码"),
                                  're_password': openapi.Schema(type=openapi.TYPE_STRING, title="密码",
-                                                               description="密码")
+                                                               description="密码"),
+                                 'id': openapi.Schema(type=openapi.TYPE_STRING, title="用户ID",
+                                                               description="用户ID")
+
                              }
                          ),
                          responses=RePasswordSerializer().get_response_body_api(),
                          tags=['用户'])
     def post(self, request: Request):
-        data = {'email': request.user.email}
+        data = {'id': request.user.id}
+        print(data)
         data.update(request.data)
         serializer_obj = RePasswordSerializer(data=data)
         if serializer_obj.reset_password():
@@ -233,6 +236,7 @@ class UserManage(APIView):
             [PermissionConstants.USER_READ],
             compare=CompareConstants.AND))
         def get(self, request: Request, current_page, page_size):
+            print("adfasfdasfdasfda")
             d = UserManageSerializer.Query(
                 data={'email_or_username': request.query_params.get('email_or_username', None),
                       'user_id': str(request.user.id)})

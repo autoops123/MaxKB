@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
     plugins: [vue(), DefineOptions()],
     server: {
       cors: true,
-      host: '0.0.0.0',
+      host: 'localhost',
       port: Number(ENV.VITE_APP_PORT),
       strictPort: true,
       proxy: proxyConf
