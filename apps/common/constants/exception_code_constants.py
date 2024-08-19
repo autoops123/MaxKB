@@ -37,3 +37,4 @@ class ExceptionCodeConstants(Enum):
     USERNAME_IS_EXIST = ExceptionCodeConstantsValue(1006, "用户名已被使用,请使用其他用户名")
     USERNAME_ERROR = ExceptionCodeConstantsValue(1006, "用户名不能为空,并且长度在6-20")
     PASSWORD_NOT_EQ_RE_PASSWORD = ExceptionCodeConstantsValue(1007, "密码与确认密码不一致")
+    USER_ID_IS_NULL = ExceptionCodeConstantsValue(1008, "用户ID不能为空")
