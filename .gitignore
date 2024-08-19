@@ -184,3 +184,4 @@ models/
 data
 .dev
 poetry.lock
+apps/static.zip
