@@ -173,8 +173,8 @@ class ApplicationSerializer(serializers.Serializer):
     # 应用类型
     type = serializers.CharField(required=True, error_messages=ErrMessage.char("应用类型"),
                                  validators=[
-                                     validators.RegexValidator(regex=re.compile("^SIMPLE|WORK_FLOW|Lang_Flow$"),
-                                                               message="应用类型只支持SIMPLE|WORK_FLOW|Lang_Flow", code=500)
+                                     validators.RegexValidator(regex=re.compile("^SIMPLE|WORK_FLOW|LANG_FLOW$"),
+                                                               message="应用类型只支持SIMPLE|WORK_FLOW|LANG_FLOW", code=500)
                                  ]
                                  )
 

@@ -236,7 +236,6 @@ class UserManage(APIView):
             [PermissionConstants.USER_READ],
             compare=CompareConstants.AND))
         def get(self, request: Request, current_page, page_size):
-            print("adfasfdasfdasfda")
             d = UserManageSerializer.Query(
                 data={'email_or_username': request.query_params.get('email_or_username', None),
                       'user_id': str(request.user.id)})

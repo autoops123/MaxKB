@@ -113,6 +113,27 @@ const initChat=(root)=>{
       closeviewport.classList.remove('maxkb-viewportnone')
     }
   }
+   
+  const drag=(e)=>{
+    if (['touchmove','touchstart'].includes(e.type)) {
+     chat_button.style.top=(e.touches[0].clientY-25)+'px'
+     chat_button.style.left=(e.touches[0].clientX-25)+'px'
+  } else {
+     chat_button.style.top=(e.y-25)+'px'
+     chat_button.style.left=(e.x-25)+'px'
+  }
+}
+  if(true){
+  chat_button.addEventListener("drag",drag)
+  chat_button.addEventListener("dragover",(e)=>{
+      e.preventDefault()
+  })
+  chat_button.addEventListener("dragend",drag)
+  chat_button.addEventListener("touchstart",drag)
+  chat_button.addEventListener("touchmove",drag)
+  }
+
+
   viewport.onclick=viewport_func
   closeviewport.onclick=viewport_func
 }
@@ -245,7 +266,9 @@ function initMaxkbStyle(root){
       #maxkb .maxkb-chat-button{
         position: fixed;
         bottom: 30px;
-	right: 50px;
+         width: 80px;
+         height: 80px;
+	      right: 50px;
         cursor: pointer;
 	z-index:9999;
     }

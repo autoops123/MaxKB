@@ -538,26 +538,25 @@ class UserInstanceSerializer(ApiMixin, serializers.ModelSerializer):
 
 class UserManageSerializer(serializers.Serializer):
     class Query(ApiMixin, serializers.Serializer):
-        email_or_username = serializers.CharField(required=False, allow_null=True,
-                                                  error_messages=ErrMessage.char("邮箱或者用户名"))
+        username = serializers.CharField(required=False, allow_null=True,
+                                                  error_messages=ErrMessage.char("用户名"))
 
         @staticmethod
         def get_request_params_api():
-            return [openapi.Parameter(name='email_or_username',
+            return [openapi.Parameter(name='username',
                                       in_=openapi.IN_QUERY,
                                       type=openapi.TYPE_STRING,
                                       required=False,
-                                      description='邮箱或者用户名')]
+                                      description='用户名')]
 
         @staticmethod
         def get_response_body_api():
             return openapi.Schema(
                 type=openapi.TYPE_OBJECT,
-                required=['username', 'email', 'id'],
+                required=['username', 'id'],
                 properties={
                     'id': openapi.Schema(type=openapi.TYPE_STRING, title='用户主键id', description="用户主键id"),
-                    'username': openapi.Schema(type=openapi.TYPE_STRING, title="用户名", description="用户名"),
-                    'email': openapi.Schema(type=openapi.TYPE_STRING, title="邮箱", description="邮箱地址")
+                    'username': openapi.Schema(type=openapi.TYPE_STRING, title="用户名", description="用户名")
                 }
             )
 
@@ -584,11 +583,11 @@ class UserManageSerializer(serializers.Serializer):
                                post_records_handler=lambda u: UserInstanceSerializer(u).data)
 
     class UserInstance(ApiMixin, serializers.Serializer):
-        email = serializers.EmailField(
-            required=True,
-            error_messages=ErrMessage.char("邮箱"),
-            validators=[validators.EmailValidator(message=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.message,
-                                                  code=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.code)])
+        # email = serializers.EmailField(
+        #     required=True,
+        #     error_messages=ErrMessage.char("邮箱"),
+        #     validators=[validators.EmailValidator(message=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.message,
+        #                                           code=ExceptionCodeConstants.EMAIL_FORMAT_ERROR.value.code)])
 
         username = serializers.CharField(required=True,
                                          error_messages=ErrMessage.char("用户名"),
@@ -612,11 +611,10 @@ class UserManageSerializer(serializers.Serializer):
         def is_valid(self, *, raise_exception=True):
             super().is_valid(raise_exception=True)
             username = self.data.get('username')
-            email = self.data.get('email')
-            u = QuerySet(User).filter(Q(username=username) | Q(email=email)).first()
+            u = QuerySet(User).filter(Q(username=username)).first()
             if u is not None:
-                if u.email == email:
-                    raise ExceptionCodeConstants.EMAIL_IS_EXIST.value.to_app_api_exception()
+                # if u.email == email:
+                #     raise ExceptionCodeConstants.EMAIL_IS_EXIST.value.to_app_api_exception()
                 if u.username == username:
                     raise ExceptionCodeConstants.USERNAME_IS_EXIST.value.to_app_api_exception()
 

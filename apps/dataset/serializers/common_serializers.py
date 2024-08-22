@@ -146,6 +146,10 @@ def get_embedding_model_by_dataset_id_list(dataset_id_list: List):
 
 def get_embedding_model_by_dataset_id(dataset_id: str):
     dataset = QuerySet(DataSet).select_related('embedding_mode').filter(id=dataset_id).first()
+    print("dataset_id:")
+    print(dataset_id)
+    if dataset is None:
+        print("dataset is none")
     return ModelManage.get_model(dataset.embedding_mode_id, lambda _id: get_model(dataset.embedding_mode))
 
 
