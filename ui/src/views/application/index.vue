@@ -89,15 +89,28 @@
                     </el-button>
                   </el-tooltip>
                   <el-divider direction="vertical" />
-                  <el-tooltip
-                    effect="dark"
-                    :content="$t('views.application.applicationList.card.delete.tooltip')"
-                    placement="top"
-                  >
-                    <el-button text @click.stop="deleteApplication(item)">
-                      <el-icon><Delete /></el-icon>
-                    </el-button>
-                  </el-tooltip>
+                  <span @click.stop>
+                    <el-dropdown trigger="click">
+                      <el-button text @click.stop>
+                        <el-icon><MoreFilled /></el-icon>
+                      </el-button>
+                      <template #dropdown>
+                        <el-dropdown-menu>
+                          <el-dropdown-item
+                            v-if="is_show_copy_button(item)"
+                            @click="copyApplication(item)"
+                          >
+                            <AppIcon iconName="app-copy"></AppIcon>
+                            复制</el-dropdown-item
+                          >
+
+                          <el-dropdown-item icon="Delete" @click.stop="deleteApplication(item)">{{
+                            $t('views.application.applicationList.card.delete.tooltip')
+                          }}</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </template>
+                    </el-dropdown>
+                  </span>
                 </div>
               </template>
             </CardBox>
@@ -106,21 +119,24 @@
       </InfiniteScroll>
     </div>
     <CreateApplicationDialog ref="CreateApplicationDialogRef" />
+    <CopyApplicationDialog ref="CopyApplicationDialogRef" />
   </div>
 </template>
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
 import applicationApi from '@/api/application'
 import CreateApplicationDialog from './component/CreateApplicationDialog.vue'
+import CopyApplicationDialog from './component/CopyApplicationDialog.vue'
 import { MsgSuccess, MsgConfirm } from '@/utils/message'
 import { isAppIcon } from '@/utils/application'
 import { useRouter } from 'vue-router'
 import { isWorkFlow } from '@/utils/application'
 import useStore from '@/stores'
 import { t } from '@/locales'
-const { application } = useStore()
+const { application, user } = useStore()
 const router = useRouter()
 
+const CopyApplicationDialogRef = ref()
 const CreateApplicationDialogRef = ref()
 const loading = ref(false)
 
@@ -134,6 +150,15 @@ const paginationConfig = reactive({
 
 const searchValue = ref('')
 
+function copyApplication(row: any) {
+  application.asyncGetApplicationDetail(row.id, loading).then((res: any) => {
+    CopyApplicationDialogRef.value.open({ ...res.data, model_id: res.data.model })
+  })
+}
+
+const is_show_copy_button = (row: any) => {
+  return user.userInfo ? user.userInfo.id == row.user_id : false
+}
 function settingApplication(row: any) {
   if (isWorkFlow(row.type)) {
     router.push({ path: `/application/${row.id}/workflow` })

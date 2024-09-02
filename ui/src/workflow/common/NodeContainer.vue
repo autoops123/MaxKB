@@ -2,12 +2,15 @@
   <div @mousedown="mousedown" class="workflow-node-container p-16" style="overflow: visible">
     <div
       class="step-container app-card p-16"
-      :class="props.nodeModel.isSelected ? 'isSelected' : ''"
+      :class="{ isSelected: props.nodeModel.isSelected, error: node_status !== 200 }"
       style="overflow: visible"
     >
       <div v-resize="resizeStepContainer">
         <div class="flex-between mb-16">
-          <div class="flex align-center" style="max-width: 90%">
+          <div
+            class="flex align-center"
+            :style="{ maxWidth: node_status == 200 ? 'calc(100% - 55px)' : 'calc(100% - 85px)' }"
+          >
             <component :is="iconComponent(`${nodeModel.type}-icon`)" class="mr-8" :size="24" />
             <h4 v-if="showOperate(nodeModel.type)" style="max-width: 90%">
               <ReadWrite
@@ -22,6 +25,7 @@
             </h4>
             <h4 v-else>{{ nodeModel.properties.stepName }}</h4>
           </div>
+
           <div
             @mousemove.stop
             @mousedown.stop
@@ -44,6 +48,14 @@
         </div>
 
         <div @mousedown.stop @keydown.stop @click.stop>
+          <el-alert
+            v-if="node_status != 200"
+            class="mb-16"
+            title="该函数不可用"
+            type="error"
+            show-icon
+            :closable="false"
+          />
           <slot></slot>
           <template v-if="nodeFields.length > 0">
             <h5 class="title-decoration-1 mb-8 mt-8">参数输出</h5>
@@ -73,7 +85,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { set } from 'lodash'
 import { iconComponent } from '../icons/utils'
 import { copyClick } from '@/utils/clipboard'
@@ -89,8 +101,12 @@ const height = ref<{
   outputContainerHeight: 0
 })
 
-const showEditIcon = ref(false)
-
+const node_status = computed(() => {
+  if (props.nodeModel.properties.status) {
+    return props.nodeModel.properties.status
+  }
+  return 200
+})
 function editName(val: string) {
   if (val.trim() && val.trim() !== props.nodeModel.properties.stepName) {
     if (
@@ -168,6 +184,9 @@ function showOperate(type: string) {
     }
     &.isSelected {
       border: 2px solid var(--el-color-primary) !important;
+    }
+    &.error {
+      border: 1px solid #f54a45 !important;
     }
   }
 }

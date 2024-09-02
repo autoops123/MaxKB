@@ -24,6 +24,8 @@ class ChatNodeSerializer(serializers.Serializer):
 
     is_result = serializers.BooleanField(required=False, error_messages=ErrMessage.boolean('是否返回内容'))
 
+    model_params_setting = serializers.DictField(required=False, error_messages=ErrMessage.integer("模型参数相关设置"))
+
 
 class IChatNode(INode):
     type = 'ai-chat-node'
@@ -36,5 +38,6 @@ class IChatNode(INode):
 
     def execute(self, model_id, system, prompt, dialogue_number, history_chat_record, stream, chat_id,
                 chat_record_id,
+                model_params_setting=None,
                 **kwargs) -> NodeResult:
         pass

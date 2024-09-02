@@ -18,6 +18,7 @@
           maxlength="64"
           :placeholder="$t('views.application.applicationForm.form.appName.placeholder')"
           show-word-limit
+          @blur="applicationForm.name = applicationForm.name?.trim()"
         />
       </el-form-item>
       <el-form-item :label="$t('views.application.applicationForm.form.appDescription.label')">
@@ -199,7 +200,6 @@ const submitHandle = async (formEl: FormInstance | undefined) => {
         } else {
           router.push({ path: `/application/${res.data.id}/${res.data.type}/setting` })
         }
-        emit('refresh')
         dialogVisible.value = false
       })
     }

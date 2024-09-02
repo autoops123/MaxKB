@@ -33,6 +33,7 @@ from common.util.field_message import ErrMessage
 from common.util.split_model import flat_map
 from dataset.models import Paragraph, Document
 from setting.models import Model, Status
+from setting.models_provider import get_model_credential
 
 chat_cache = caches['chat_cache']
 
@@ -40,21 +41,18 @@ chat_cache = caches['chat_cache']
 class ChatInfo:
     def __init__(self,
                  chat_id: str,
-                 chat_model: BaseChatModel | None,
                  dataset_id_list: List[str],
                  exclude_document_id_list: list[str],
                  application: Application,
                  work_flow_version: WorkFlowVersion = None):
         """
         :param chat_id:                     对话id
-        :param chat_model:                  对话模型
         :param dataset_id_list:             数据集列表
         :param exclude_document_id_list:    排除的文档
         :param application:                 应用信息
         """
         self.chat_id = chat_id
         self.application = application
-        self.chat_model = chat_model
         self.dataset_id_list = dataset_id_list
         self.exclude_document_id_list = exclude_document_id_list
         self.chat_record_list: List[ChatRecord] = []
@@ -63,6 +61,12 @@ class ChatInfo:
     def to_base_pipeline_manage_params(self):
         dataset_setting = self.application.dataset_setting
         model_setting = self.application.model_setting
+        model_id = self.application.model.id if self.application.model is not None else None
+        model_params_setting = None
+        if model_id is not None:
+            model = QuerySet(Model).filter(id=model_id).first()
+            credential = get_model_credential(model.provider, model.model_type, model.model_name)
+            model_params_setting = credential.get_model_params_setting_form(model.model_name).get_default_form_data()
         return {
             'dataset_id_list': self.dataset_id_list,
             'exclude_document_id_list': self.exclude_document_id_list,
@@ -76,10 +80,11 @@ class ChatInfo:
             'dialogue_number': self.application.dialogue_number,
             'prompt': model_setting.get(
                 'prompt') if 'prompt' in model_setting else Application.get_default_model_prompt(),
-            'chat_model': self.chat_model,
-            'model_id': self.application.model.id if self.application.model is not None else None,
+            'model_id': model_id,
             'problem_optimization': self.application.problem_optimization,
             'stream': True,
+            'model_params_setting': model_params_setting if self.application.model_params_setting is None or len(
+                self.application.model_params_setting.keys()) == 0 else self.application.model_params_setting,
             'search_mode': self.application.dataset_setting.get(
                 'search_mode') if 'search_mode' in self.application.dataset_setting else 'embedding',
             'no_references_setting': self.application.dataset_setting.get(
@@ -88,7 +93,6 @@ class ChatInfo:
                 'value': '{question}',
             },
             'user_id': self.application.user_id
-
         }
 
     def to_pipeline_manage_params(self, problem_text: str, post_response_handler: PostResponseHandler,
@@ -274,7 +278,7 @@ class ChatMessageSerializer(serializers.Serializer):
                                     QuerySet(Document).filter(
                                         dataset_id__in=dataset_id_list,
                                         is_active=False)]
-        return ChatInfo(chat_id, None, dataset_id_list, exclude_document_id_list, application)
+        return ChatInfo(chat_id, dataset_id_list, exclude_document_id_list, application)
 
     @staticmethod
     def re_open_chat_work_flow(chat_id, application):
@@ -282,4 +286,4 @@ class ChatMessageSerializer(serializers.Serializer):
             '-create_time')[0:1].first()
         if work_flow_version is None:
             raise AppApiException(500, "应用未发布,请发布后再使用")
-        return ChatInfo(chat_id, None, [], [], application, work_flow_version)
+        return ChatInfo(chat_id, [], [], application, work_flow_version)

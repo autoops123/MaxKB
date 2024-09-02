@@ -12,8 +12,42 @@ from langchain_core.messages import HumanMessage
 
 from common import forms
 from common.exception.app_exception import AppApiException
-from common.forms import BaseForm
+from common.forms import BaseForm, TooltipLabel
 from setting.models_provider.base_model_provider import BaseModelCredential, ValidCode
+
+
+class XunFeiLLMModelGeneralParams(BaseForm):
+    temperature = forms.SliderField(TooltipLabel('温度', '较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定'),
+                                    required=True, default_value=0.5,
+                                    _min=0.1,
+                                    _max=1.0,
+                                    _step=0.01,
+                                    precision=2)
+
+    max_tokens = forms.SliderField(
+        TooltipLabel('输出最大Tokens', '较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定'),
+        required=True, default_value=4096,
+        _min=1,
+        _max=4096,
+        _step=1,
+        precision=0)
+
+
+class XunFeiLLMModelProParams(BaseForm):
+    temperature = forms.SliderField(TooltipLabel('温度', '较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定'),
+                                    required=True, default_value=0.5,
+                                    _min=0.1,
+                                    _max=1.0,
+                                    _step=0.01,
+                                    precision=2)
+
+    max_tokens = forms.SliderField(
+        TooltipLabel('输出最大Tokens', '较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定'),
+        required=True, default_value=4096,
+        _min=1,
+        _max=8192,
+        _step=1,
+        precision=0)
 
 
 class XunFeiLLMModelCredential(BaseForm, BaseModelCredential):
@@ -49,3 +83,8 @@ class XunFeiLLMModelCredential(BaseForm, BaseModelCredential):
     spark_app_id = forms.TextInputField('APP ID', required=True)
     spark_api_key = forms.PasswordInputField("API Key", required=True)
     spark_api_secret = forms.PasswordInputField('API Secret', required=True)
+
+    def get_model_params_setting_form(self, model_name):
+        if model_name == 'general' or model_name == 'pro-128k':
+            return XunFeiLLMModelGeneralParams()
+        return XunFeiLLMModelProParams()

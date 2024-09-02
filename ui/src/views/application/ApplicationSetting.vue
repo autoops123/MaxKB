@@ -43,6 +43,7 @@
                   maxlength="64"
                   :placeholder="$t('views.application.applicationForm.form.appName.placeholder')"
                   show-word-limit
+                  @blur="applicationForm.name = applicationForm.name?.trim()"
                 />
               </el-form-item>
               <el-form-item
@@ -67,9 +68,18 @@
                 <template #label>
                   <div class="flex-between">
                     <span>{{ $t('views.application.applicationForm.form.aiModel.label') }}</span>
+                    <el-button
+                      type="primary"
+                      link
+                      @click="openAIParamSettingDialog"
+                      :disabled="!applicationForm.model_id"
+                    >
+                      {{ $t('views.application.applicationForm.form.paramSetting') }}
+                    </el-button>
                   </div>
                 </template>
                 <el-select
+                  @change="model_change"
                   v-model="applicationForm.model_id"
                   :placeholder="$t('views.application.applicationForm.form.aiModel.placeholder')"
                   class="w-full"
@@ -101,9 +111,9 @@
                           >公用
                         </el-tag>
                       </div>
-                      <el-icon class="check-icon" v-if="item.id === applicationForm.model_id"
-                        ><Check
-                      /></el-icon>
+                      <el-icon class="check-icon" v-if="item.id === applicationForm.model_id">
+                        <Check />
+                      </el-icon>
                     </el-option>
                     <!-- 不可用 -->
                     <el-option
@@ -124,15 +134,17 @@
                           $t('views.application.applicationForm.form.aiModel.unavailable')
                         }}</span>
                       </div>
-                      <el-icon class="check-icon" v-if="item.id === applicationForm.model_id"
-                        ><Check
-                      /></el-icon>
+                      <el-icon class="check-icon" v-if="item.id === applicationForm.model_id">
+                        <Check />
+                      </el-icon>
                     </el-option>
                   </el-option-group>
                   <template #footer>
                     <div class="w-full text-left cursor" @click="openCreateModel()">
                       <el-button type="primary" link>
-                        <el-icon class="mr-4"><Plus /></el-icon>
+                        <el-icon class="mr-4">
+                          <Plus />
+                        </el-icon>
                         {{ $t('views.application.applicationForm.form.addModel') }}
                       </el-button>
                     </div>
@@ -152,12 +164,14 @@
                       >
                     </div>
                     <el-tooltip effect="dark" placement="right">
-                      <template #content>{{
-                        $t('views.application.applicationForm.form.prompt.tooltip', {
-                          data: '{data}',
-                          question: '{question}'
-                        })
-                      }}</template>
+                      <template #content
+                        >{{
+                          $t('views.application.applicationForm.form.prompt.tooltip', {
+                            data: '{data}',
+                            question: '{question}'
+                          })
+                        }}
+                      </template>
                       <AppIcon iconName="app-warning" class="app-warning-icon"></AppIcon>
                     </el-tooltip>
                   </div>
@@ -189,20 +203,22 @@
                     }}</span>
                     <div>
                       <el-button type="primary" link @click="openParamSettingDialog">
-                        <AppIcon iconName="app-operation" class="mr-4"></AppIcon
-                        >{{ $t('views.application.applicationForm.form.paramSetting') }}
+                        <AppIcon iconName="app-operation" class="mr-4"></AppIcon>
+                        {{ $t('views.application.applicationForm.form.paramSetting') }}
                       </el-button>
                       <el-button type="primary" link @click="openDatasetDialog">
-                        <el-icon class="mr-4"><Plus /></el-icon
-                        >{{ $t('views.application.applicationForm.form.add') }}
+                        <el-icon class="mr-4">
+                          <Plus />
+                        </el-icon>
+                        {{ $t('views.application.applicationForm.form.add') }}
                       </el-button>
                     </div>
                   </div>
                 </template>
                 <div class="w-full">
-                  <el-text type="info" v-if="applicationForm.dataset_id_list?.length === 0">{{
-                    $t('views.application.applicationForm.form.relatedKnowledgeBaseWhere')
-                  }}</el-text>
+                  <el-text type="info" v-if="applicationForm.dataset_id_list?.length === 0"
+                    >{{ $t('views.application.applicationForm.form.relatedKnowledgeBaseWhere') }}
+                  </el-text>
                   <el-row :gutter="12" v-else>
                     <el-col
                       :xs="24"
@@ -234,7 +250,9 @@
                             </div>
                           </div>
                           <el-button text @click="removeDataset(item)">
-                            <el-icon><Close /></el-icon>
+                            <el-icon>
+                              <Close />
+                            </el-icon>
                           </el-button>
                         </div>
                       </el-card>
@@ -311,6 +329,7 @@
       </el-col>
     </el-row>
 
+    <AIModeParamSettingDialog ref="AIModeParamSettingDialogRef" @refresh="refreshForm" />
     <ParamSettingDialog ref="ParamSettingDialogRef" @refresh="refreshParam" />
     <AddDatasetDialog
       ref="AddDatasetDialogRef"
@@ -330,9 +349,10 @@
   </LayoutContainer>
 </template>
 <script setup lang="ts">
-import { reactive, ref, watch, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { reactive, ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { groupBy } from 'lodash'
+import AIModeParamSettingDialog from './component/AIModeParamSettingDialog.vue'
 import ParamSettingDialog from './component/ParamSettingDialog.vue'
 import AddDatasetDialog from './component/AddDatasetDialog.vue'
 import CreateModelDialog from '@/views/template/component/CreateModelDialog.vue'
@@ -346,6 +366,7 @@ import { relatedObject } from '@/utils/utils'
 import { MsgSuccess } from '@/utils/message'
 import useStore from '@/stores'
 import { t } from '@/locales'
+
 const { model, application } = useStore()
 
 const route = useRoute()
@@ -358,6 +379,7 @@ const defaultPrompt = t('views.application.prompt.defaultPrompt', {
   question: '{question}'
 })
 
+const AIModeParamSettingDialogRef = ref<InstanceType<typeof AIModeParamSettingDialog>>()
 const ParamSettingDialogRef = ref<InstanceType<typeof ParamSettingDialog>>()
 const createModelRef = ref<InstanceType<typeof CreateModelDialog>>()
 const selectProviderRef = ref<InstanceType<typeof SelectProviderDialog>>()
@@ -387,6 +409,7 @@ const applicationForm = ref<ApplicationFormType>({
   model_setting: {
     prompt: defaultPrompt
   },
+  model_params_setting: {},
   problem_optimization: false,
   type: 'SIMPLE'
 })
@@ -428,6 +451,21 @@ const submit = async (formEl: FormInstance | undefined) => {
     }
   })
 }
+const model_change = (model_id?: string) => {
+  if (model_id) {
+    AIModeParamSettingDialogRef.value?.reset_default(model_id, id)
+  } else {
+    refreshForm({})
+  }
+}
+const openAIParamSettingDialog = () => {
+  const model_id = applicationForm.value.model_id
+  if (!model_id) {
+    MsgSuccess(t('请选择AI 模型'))
+    return
+  }
+  AIModeParamSettingDialogRef.value?.open(model_id, id, applicationForm.value.model_params_setting)
+}
 
 const openParamSettingDialog = () => {
   ParamSettingDialogRef.value?.open(applicationForm.value.dataset_setting)
@@ -435,6 +473,10 @@ const openParamSettingDialog = () => {
 
 function refreshParam(data: any) {
   applicationForm.value.dataset_setting = data
+}
+
+function refreshForm(data: any) {
+  applicationForm.value.model_params_setting = data
 }
 
 const openCreateModel = (provider?: Provider) => {
@@ -453,9 +495,11 @@ function removeDataset(id: any) {
     )
   }
 }
+
 function addDataset(val: Array<string>) {
   applicationForm.value.dataset_id_list = val
 }
+
 function openDatasetDialog() {
   AddDatasetDialogRef.value.open(applicationForm.value.dataset_id_list)
 }
@@ -515,15 +559,18 @@ onMounted(() => {
   .relate-dataset-card {
     color: var(--app-text-color);
   }
+
   .dialog-bg {
     border-radius: 8px;
     background: var(--dialog-bg-gradient-color);
     overflow: hidden;
     box-sizing: border-box;
   }
+
   .scrollbar-height-left {
     height: calc(var(--app-main-height) - 64px);
   }
+
   .scrollbar-height {
     height: calc(var(--app-main-height) - 160px);
   }

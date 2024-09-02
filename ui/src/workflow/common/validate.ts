@@ -1,6 +1,11 @@
 import { WorkflowType } from '@/enums/workflow'
 
-const end_nodes = [WorkflowType.AiChat, WorkflowType.Reply]
+const end_nodes = [
+  WorkflowType.AiChat,
+  WorkflowType.Reply,
+  WorkflowType.FunctionLib,
+  WorkflowType.FunctionLibCustom
+]
 export class WorkFlowInstance {
   nodes
   edges
@@ -132,6 +137,9 @@ export class WorkFlowInstance {
       } else if (edge_list.length > 1) {
         throw `${node.properties.stepName} 节点不能连接俩个节点`
       }
+    }
+    if (node.properties.status && node.properties.status !== 200) {
+      throw `${node.properties.stepName} 节点不可用`
     }
   }
 }

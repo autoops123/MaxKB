@@ -108,6 +108,13 @@ class BaseModelCredential(ABC):
         """
         pass
 
+    def get_model_params_setting_form(self, model_name):
+        """
+               模型参数设置表单
+               :return:
+        """
+        pass
+
     @staticmethod
     def encryption(message: str):
         """

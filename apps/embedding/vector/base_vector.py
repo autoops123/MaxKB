@@ -84,9 +84,9 @@ class BaseVectorStore(ABC):
         chunk_list = chunk_data(data)
         result = sub_array(chunk_list)
         for child_array in result:
-            self._batch_save(child_array, embedding)
+            self._batch_save(child_array, embedding, lambda: True)
 
-    def batch_save(self, data_list: List[Dict], embedding: Embeddings):
+    def batch_save(self, data_list: List[Dict], embedding: Embeddings, is_save_function):
         # 获取锁
         lock.acquire()
         try:
@@ -100,7 +100,10 @@ class BaseVectorStore(ABC):
             chunk_list = chunk_data_list(data_list)
             result = sub_array(chunk_list)
             for child_array in result:
-                self._batch_save(child_array, embedding)
+                if is_save_function():
+                    self._batch_save(child_array, embedding, is_save_function)
+                else:
+                    break
         finally:
             # 释放锁
             lock.release()
@@ -113,7 +116,7 @@ class BaseVectorStore(ABC):
         pass
 
     @abstractmethod
-    def _batch_save(self, text_list: List[Dict], embedding: Embeddings):
+    def _batch_save(self, text_list: List[Dict], embedding: Embeddings, is_save_function):
         pass
 
     def search(self, query_text, dataset_id_list: list[str], exclude_document_id_list: list[str],
@@ -124,7 +127,7 @@ class BaseVectorStore(ABC):
             return []
         embedding_query = embedding.embed_query(query_text)
         result = self.query(embedding_query, dataset_id_list, exclude_document_id_list, exclude_paragraph_list,
-                            is_active, 1, 0.65)
+                            is_active, 1, 3, 0.65)
         return result[0]
 
     @abstractmethod
@@ -166,7 +169,7 @@ class BaseVectorStore(ABC):
         pass
 
     @abstractmethod
-    def delete_bu_document_id_list(self, document_id_list: List[str]):
+    def delete_by_document_id_list(self, document_id_list: List[str]):
         pass
 
     @abstractmethod

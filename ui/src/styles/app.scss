@@ -480,6 +480,10 @@ h5 {
   background: #3370ff;
 }
 
+.avatar-green {
+  background: #34c724;
+}
+
 .success {
   color: var(--el-color-success);
 }
@@ -705,4 +709,22 @@ h5 {
 // 自定义主题
 .custom-header {
   background: var(--el-color-primary-light-9) !important;
+}
+
+// Codemirror 编辑器
+.function-CodemirrorEditor {
+  border: 1px solid #bbbfc4;
+  border-radius: 4px;
+  position: relative;
+  padding-bottom: 20px;
+  &__footer {
+    .magnify {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+    }
+  }
+  .cm-gutters {
+    display: none !important;
+  }
 }

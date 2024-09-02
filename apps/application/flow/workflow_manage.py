@@ -10,13 +10,18 @@ import json
 from functools import reduce
 from typing import List, Dict
 
+from django.db.models import QuerySet
 from langchain_core.messages import AIMessage
 from langchain_core.prompts import PromptTemplate
+from rest_framework.exceptions import ErrorDetail, ValidationError
 
 from application.flow import tools
 from application.flow.i_step_node import INode, WorkFlowPostHandler, NodeResult
 from application.flow.step_node import get_node
 from common.exception.app_exception import AppApiException
+from function_lib.models.function import FunctionLib
+from setting.models import Model
+from setting.models_provider import get_model_credential
 
 
 class Edge:
@@ -40,7 +45,7 @@ class Node:
             self.__setattr__(keyword, kwargs.get(keyword))
 
 
-end_nodes = ['ai-chat-node', 'reply-node']
+end_nodes = ['ai-chat-node', 'reply-node', 'function-node', 'function-lib-node']
 
 
 class Flow:
@@ -68,6 +73,7 @@ class Flow:
         """
         校验工作流数据
         """
+        self.is_valid_model_params()
         self.is_valid_start_node()
         self.is_valid_base_node()
         self.is_valid_work_flow()
@@ -123,6 +129,31 @@ class Flow:
         if len(start_node_list) > 1:
             raise AppApiException(500, '开始节点只能有一个')
 
+    def is_valid_model_params(self):
+        node_list = [node for node in self.nodes if (node.type == 'ai-chat-node' or node.type == 'question-node')]
+        for node in node_list:
+            model = QuerySet(Model).filter(id=node.properties.get('node_data', {}).get('model_id')).first()
+            if model is None:
+                raise ValidationError(ErrorDetail(f'节点{node.properties.get("stepName")} 模型不存在'))
+            credential = get_model_credential(model.provider, model.model_type, model.model_name)
+            model_params_setting = node.properties.get('node_data', {}).get('model_params_setting')
+            model_params_setting_form = credential.get_model_params_setting_form(
+                model.model_name)
+            if model_params_setting is None:
+                model_params_setting = model_params_setting_form.get_default_form_data()
+                node.properties.get('node_data', {})['model_params_setting'] = model_params_setting
+            model_params_setting_form.valid_form(model_params_setting)
+            if node.properties.get('status', 200) != 200:
+                raise ValidationError(ErrorDetail(f'节点{node.properties.get("stepName")} 不可用'))
+        node_list = [node for node in self.nodes if (node.type == 'function-lib-node')]
+        for node in node_list:
+            function_lib_id = node.properties.get('node_data', {}).get('function_lib_id')
+            if function_lib_id is None:
+                raise ValidationError(ErrorDetail(f'节点{node.properties.get("stepName")} 函数库id不能为空'))
+            f_lib = QuerySet(FunctionLib).filter(id=function_lib_id).first()
+            if f_lib is None:
+                raise ValidationError(ErrorDetail(f'节点{node.properties.get("stepName")} 函数库不可用'))
+
     def is_valid_base_node(self):
         base_node_list = [node for node in self.nodes if node.id == 'base-node']
         if len(base_node_list) == 0:
@@ -151,6 +182,7 @@ class WorkflowManage:
         try:
             while self.has_next_node(self.current_result):
                 self.current_node = self.get_next_node()
+                self.current_node.valid_args(self.current_node.node_params, self.current_node.workflow_params)
                 self.node_context.append(self.current_node)
                 self.current_result = self.current_node.run()
                 result = self.current_result.write_context(self.current_node, self)
@@ -173,12 +205,17 @@ class WorkflowManage:
             while self.has_next_node(self.current_result):
                 self.current_node = self.get_next_node()
                 self.node_context.append(self.current_node)
+                self.current_node.valid_args(self.current_node.node_params, self.current_node.workflow_params)
                 self.current_result = self.current_node.run()
                 result = self.current_result.write_context(self.current_node, self)
                 if result is not None:
-                    for r in result:
-                        if self.is_result():
+                    if self.is_result():
+                        for r in result:
                             yield self.get_chunk_content(r)
+                        yield self.get_chunk_content('\n')
+                        self.answer += '\n'
+                    else:
+                        list(result)
                 if not self.has_next_node(self.current_result):
                     yield self.get_chunk_content('', True)
                     break

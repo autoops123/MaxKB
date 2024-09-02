@@ -3,7 +3,7 @@
     <template #header>
       <div class="flex">
         <span style="height: 32px; width: 32px" :innerHTML="icon" class="mr-12"></span>
-        <div class="w-full">
+        <div style="width: calc(100% - 32px - 4px - var(--app-base-px))">
           <div class="flex" style="height: 22px">
             <auto-tooltip :content="model.name" style="max-width: 40%">
               {{ model.name }}
@@ -88,7 +88,7 @@
         </el-tooltip>
       </div>
     </template>
-    <EditModel ref="eidtModelRef" @submit="emit('change')"></EditModel>
+    <EditModel ref="editModelRef" @submit="emit('change')"></EditModel>
   </card-box>
 </template>
 <script setup lang="ts">
@@ -130,7 +130,7 @@ const errMessage = computed(() => {
   return ''
 })
 const emit = defineEmits(['change', 'update:model'])
-const eidtModelRef = ref<InstanceType<typeof EditModel>>()
+const editModelRef = ref<InstanceType<typeof EditModel>>()
 let interval: any
 const deleteModel = () => {
   MsgConfirm(`删除模型 `, `是否删除模型：${props.model.name} ?`, {
@@ -154,7 +154,7 @@ const cancelDownload = () => {
 const openEditModel = () => {
   const provider = props.provider_list.find((p) => p.provider === props.model.provider)
   if (provider) {
-    eidtModelRef.value?.open(provider, props.model)
+    editModelRef.value?.open(provider, props.model)
   }
 }
 const icon = computed(() => {

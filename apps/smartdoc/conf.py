@@ -87,7 +87,11 @@ class Config(dict):
         "EMBEDDING_MODEL_PATH": os.path.join(PROJECT_DIR, 'models'),
         # 向量库配置
         "VECTOR_STORE_NAME": 'pg_vector',
-        "DEBUG": False
+        "DEBUG": False,
+        'SANDBOX': False,
+        'LOCAL_MODEL_HOST': '127.0.0.1',
+        'LOCAL_MODEL_PORT': '11636',
+        'LOCAL_MODEL_PROTOCOL': "http"
 
     }
 

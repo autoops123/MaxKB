@@ -1,11 +1,30 @@
 import os
 import re
 from typing import Dict
-from common.exception.app_exception import AppApiException
-from common.forms import BaseForm
-from setting.models_provider.base_model_provider import ValidCode, BaseModelCredential
+
 from langchain_core.messages import HumanMessage
+
 from common import forms
+from common.exception.app_exception import AppApiException
+from common.forms import BaseForm, TooltipLabel
+from setting.models_provider.base_model_provider import ValidCode, BaseModelCredential
+
+
+class BedrockLLMModelParams(BaseForm):
+    temperature = forms.SliderField(TooltipLabel('温度', '较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定'),
+                                    required=True, default_value=0.7,
+                                    _min=0.1,
+                                    _max=1.0,
+                                    _step=0.01,
+                                    precision=2)
+
+    max_tokens = forms.SliderField(
+        TooltipLabel('输出最大Tokens', '较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定'),
+        required=True, default_value=1024,
+        _min=1,
+        _max=4096,
+        _step=1,
+        precision=0)
 
 
 class BedrockLLMModelCredential(BaseForm, BaseModelCredential):
@@ -60,3 +79,6 @@ class BedrockLLMModelCredential(BaseForm, BaseModelCredential):
     region_name = forms.TextInputField('Region Name', required=True)
     access_key_id = forms.TextInputField('Access Key ID', required=True)
     secret_access_key = forms.PasswordInputField('Secret Access Key', required=True)
+
+    def get_model_params_setting_form(self, model_name):
+        return BedrockLLMModelParams()

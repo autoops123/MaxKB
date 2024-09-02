@@ -27,7 +27,7 @@ def get_level_block(text, level_content_list, level_content_index, cursor):
         level_content_list) else None
     start_index = text.index(start_content, cursor)
     end_index = text.index(next_content, start_index + 1) if next_content is not None else len(text)
-    return text[start_index+len(start_content):end_index], end_index
+    return text[start_index + len(start_content):end_index], end_index
 
 
 def to_tree_obj(content, state='title'):
@@ -246,11 +246,15 @@ def post_handler_paragraph(content: str, limit: int):
     while (pos := content.find("\n", start)) != -1:
         split, start = content[start:pos + 1], pos + 1
         if len(temp_char + split) > limit:
+            if len(temp_char) > 4096:
+                pass
             result.append(temp_char)
             temp_char = ''
         temp_char = temp_char + split
     temp_char = temp_char + content[start:]
     if len(temp_char) > 0:
+        if len(temp_char) > 4096:
+            pass
         result.append(temp_char)
 
     pattern = "[\\S\\s]{1," + str(limit) + '}'
@@ -298,22 +302,27 @@ class SplitModel:
         """
         level_content_list = parse_title_level(text, self.content_level_pattern, index)
         if len(level_content_list) == 0:
-            return list(map(lambda row: to_tree_obj(row, 'block'), post_handler_paragraph(text, limit=self.limit)))
+            return [to_tree_obj(row, 'block') for row in post_handler_paragraph(text, limit=self.limit)]
         if index == 0 and text.lstrip().index(level_content_list[0]["content"].lstrip()) != 0:
             level_content_list.insert(0, to_tree_obj(""))
 
         cursor = 0
-        for i in range(len(level_content_list)):
-            block, cursor = get_level_block(text, level_content_list, i, cursor)
+        level_title_content_list = [item for item in level_content_list if item.get('state') == 'title']
+        for i in range(len(level_title_content_list)):
+            start_content: str = level_title_content_list[i].get('content')
+            if cursor < text.index(start_content, cursor):
+                for row in post_handler_paragraph(text[cursor:   text.index(start_content, cursor)], limit=self.limit):
+                    level_content_list.insert(0, to_tree_obj(row, 'block'))
+
+            block, cursor = get_level_block(text, level_title_content_list, i, cursor)
             if len(block) == 0:
-                level_content_list[i]['children'] = [to_tree_obj("", "block")]
                 continue
             children = self.parse_to_tree(text=block, index=index + 1)
-            level_content_list[i]['children'] = children
+            level_title_content_list[i]['children'] = children
             first_child_idx_in_block = block.lstrip().index(children[0]["content"].lstrip())
             if first_child_idx_in_block != 0:
                 inner_children = self.parse_to_tree(block[:first_child_idx_in_block], index + 1)
-                level_content_list[i]['children'].extend(inner_children)
+                level_title_content_list[i]['children'].extend(inner_children)
         return level_content_list
 
     def parse(self, text: str):
@@ -327,6 +336,9 @@ class SplitModel:
         text = text.replace("\0", '')
         result_tree = self.parse_to_tree(text, 0)
         result = result_tree_to_paragraph(result_tree, [], [], self.with_filter)
+        for e in result:
+            if len(e['content']) > 4096:
+                pass
         return [item for item in [self.post_reset_paragraph(row) for row in result] if
                 'content' in item and len(item.get('content').strip()) > 0]
 

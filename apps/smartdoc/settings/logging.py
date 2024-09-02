@@ -91,7 +91,7 @@ LOGGING = {
         },
         'sqlalchemy': {
             'handlers': ['console', 'file', 'syslog'],
-            'level': LOG_LEVEL,
+            'level': "ERROR",
             'propagate': False,
         },
         'django.db.backends': {
@@ -112,6 +112,11 @@ LOGGING = {
         'max_kb': {
             'handlers': ['console', 'file'],
             'level': LOG_LEVEL,
+            'propagate': False,
+        },
+        'common.event': {
+            'handlers': ['console', 'file'],
+            'level': "DEBUG",
             'propagate': False,
         },
     }

@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import applicationApi from '@/api/application'
 import applicationXpackApi from '@/api/application-xpack'
-import { type Ref } from 'vue'
+import { type Ref, type UnwrapRef } from 'vue'
 
 import useUserStore from './user'
+import type { ApplicationFormType } from '@/api/type/application'
 
 const useApplicationStore = defineStore({
   id: 'application',
