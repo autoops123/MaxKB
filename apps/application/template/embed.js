@@ -266,11 +266,11 @@ function initMaxkbStyle(root){
       #maxkb .maxkb-chat-button{
         position: fixed;
         bottom: 30px;
-         width: 80px;
-         height: 80px;
+        width: 80px;
+        height: 80px;
 	      right: 50px;
         cursor: pointer;
-	z-index:9999;
+	      z-index:9999;
     }
     #maxkb #maxkb-chat-container{
         z-index:10000;position: relative;
