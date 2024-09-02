@@ -132,6 +132,8 @@
           </template>
           <MdEditor
             @wheel="wheel"
+            @keydown="isKeyDown = true"
+            @keyup="isKeyDown = false"
             class="reply-node-editor"
             style="height: 150px"
             v-model="chat_data.prompt"
@@ -222,12 +224,10 @@ const wheel = (e: any) => {
 const dialogVisible = ref(false)
 const cloneContent = ref('')
 const footers: any = [null, '=', 0]
-
 function openDialog() {
   cloneContent.value = chat_data.value.prompt
   dialogVisible.value = true
 }
-
 function submitDialog() {
   set(props.nodeModel.properties.node_data, 'prompt', cloneContent.value)
   dialogVisible.value = false
