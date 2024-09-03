@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 rm -f /opt/maxkb/app/tmp/*.pid
 # Start postgresql
 #docker-entrypoint.sh postgres &

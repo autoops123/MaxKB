@@ -1,4 +1,4 @@
-FROM 1panel/maxkb:v1.4.0 as stage-build
+FROM 1panel/maxkb:v1.4.0 AS stage-build
 
 
 FROM python:3.11-slim-bookworm
@@ -19,30 +19,31 @@ ENV MAXKB_VERSION="${DOCKER_IMAGE_TAG} (build at ${BUILD_AT}, commit: ${GITHUB_C
 
 WORKDIR /opt/maxkb/app
 
+
+
+COPY --from=stage-build /opt/maxkb /opt/maxkb
+#COPY --from=stage-build /opt/py3 /opt/py3
+#COPY --from=stage-build /opt/maxkb/app/model /opt/maxkb/model
+
 RUN python3 -m venv /opt/py3 && \
     pip install poetry --break-system-packages && \
     poetry config virtualenvs.create false && \
     . /opt/py3/bin/activate
 
-
-COPY --from=stage-build /opt/maxkb /opt/maxkb
-COPY --from=stage-build /opt/py3 /opt/py3
-#COPY --from=stage-build /opt/maxkb/app/model /opt/maxkb/model
-
 RUN rm -rf /opt/maxkb/app/apps && \
-    rm -rf /opt/maxkb/app/installer \
+    rm -rf /opt/maxkb/app/installer
 
 COPY apps /opt/maxkb/app/apps
 COPY installer /opt/maxkb/app/installer
 
 
-ENV LANG=en_US.UTF-8 \
-    PATH=/opt/py3/bin:$PATH
+ENV LANG=en_US.UTF-8
+ENV PATH=/opt/py3/bin:$PATH
 
-ENV POSTGRES_USER root
-ENV POSTGRES_PASSWORD Password123@postgres
+ENV POSTGRES_USER=root
+ENV POSTGRES_PASSWORD=Password123@postgres
 
-RUN chmod 755 /opt/maxkb/app/installer/run-maxkb.sh && \
+RUN chmod 777 /opt/maxkb/app/installer/run-maxkb.sh && \
     cp -r /opt/maxkb/model/base/hub /opt/maxkb/model/tokenizer && \
     cp -f /opt/maxkb/app/installer/run-maxkb.sh /usr/bin/run-maxkb.sh && \
     cp -f /opt/maxkb/app/installer/init.sql /docker-entrypoint-initdb.d
@@ -50,7 +51,7 @@ RUN chmod 755 /opt/maxkb/app/installer/run-maxkb.sh && \
 EXPOSE 8080
 
 ENTRYPOINT ["bash", "-c"]
-CMD [ "/usr/bin/run-maxkb.sh" ]
+CMD [ "/opt/maxkb/app/installer/run-maxkb.sh" ]
 
 
 

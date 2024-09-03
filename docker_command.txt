@@ -3,7 +3,14 @@ docker run -d --name=maxkb_8183 -p 8183:8080  -e MAXKB_DB_HOST=192.168.101.31 -e
 
 
 --win
-docker run -d --name=maxkb_8183 -p 8183:8080  -e MAXKB_DB_HOST=192.168.101.31 -e MAXKB_DB_USER=postgres -e MAXKB_DB_PASSWORD=postgres  -v /zrzy/maxkb/data:/var/lib/postgresql/data 1panel/maxkb:1.4.0_240822
+docker run  --entrypoint /opt/maxkb/app/installer/run-maxkb.sh -d  --name=maxkb_8183 -p 8183:8080  -e MAXKB_DB_HOST=192.168.101.31 -e MAXKB_DB_USER=postgres -e MAXKB_DB_PASSWORD=postgres  -v d:/data/maxkb/data:/var/lib/postgresql/data maxkb:1.5.1
+docker run  -d  --name=maxkb_8183 -p 8183:8080  -e MAXKB_DB_HOST=192.168.101.31 -e MAXKB_DB_USER=postgres -e MAXKB_DB_PASSWORD=postgres  -v d:/data/maxkb/data:/var/lib/postgresql/data maxkb:1.5.1 sh /usr/bin/run-maxkb.sh
+
+
+docker run -d --name=maxkb_8183 -p 8183:8080  -e MAXKB_DB_HOST=192.168.101.31 -e MAXKB_DB_USER=postgres \
+           -e MAXKB_DB_PASSWORD=postgres \
+           -v d:/data/maxkb/data:/var/lib/postgresql/data \
+           maxkb:1.5.1 sh /usr/bin/run-maxkb.sh
 
 --Linux
-docker run -d --name=maxkb_8183 -p 8183:8080  -e MAXKB_DB_HOST=192.168.101.31 -e MAXKB_DB_USER=postgres -e MAXKB_DB_PASSWORD=postgres  -v /zrzy/maxkb/data:/var/lib/postgresql/data 1panel/maxkb:v1.3.0
+docker run -d --name=maxkb_1.5.1 -p 8183:8080  -e MAXKB_DB_HOST=192.168.101.31 -e MAXKB_DB_USER=postgres -e MAXKB_DB_PASSWORD=postgres  -v /zrzy/maxkb/data:/var/lib/postgresql/data maxkb:1.5.1
