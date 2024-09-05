@@ -51,6 +51,10 @@ model_info_list = [
         'Meta Llama 3：迄今为止最有能力的公开产品LLM。80亿参数。',
         ModelTypeConst.LLM, ollama_llm_model_credential, OllamaChatModel),
     ModelInfo(
+        'llama3.1:8b',
+        'Meta Llama 3.1：迄今为止最有能力的公开产品LLM。80亿参数。',
+        ModelTypeConst.LLM, ollama_llm_model_credential, OllamaChatModel),
+    ModelInfo(
         'llama3:70b',
         'Meta Llama 3：迄今为止最有能力的公开产品LLM。700亿参数。',
         ModelTypeConst.LLM, ollama_llm_model_credential, OllamaChatModel),
